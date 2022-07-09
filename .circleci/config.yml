@@ -211,10 +211,9 @@ jobs:
 
   run-migrations:
     docker:
-      - image: circleci/node:13.8.0
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - aws-cli/setup
       - restore_cache:
           keys: [backend-build]
       - run:
@@ -223,14 +222,14 @@ jobs:
             cd backend
             npm install
             npm run migrations > migrations_dump.log
-      # - run:
-      #     name: Send migration results to memstash
-      #     command: |
-      #       curl -H "Content-Type: text/plain" \
-      #         -H "token: << pipeline.parameters.memstash-token >>" \
-      #         --request PUT --data "1" \
-      #         https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
-#      # Here's where you will add some code to rollback on failure      
+      - run:
+          name: Send migration status to kvdb.io
+          command: |
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then
+              curl https://kvdb.io/6mQdemvUN5T9qudjcPcnkg/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            fi
+      - destroy-environment     
 
 #   deploy-frontend:
 #     docker:
