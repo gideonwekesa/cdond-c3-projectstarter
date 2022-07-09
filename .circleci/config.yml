@@ -243,43 +243,76 @@ jobs:
             fi
       - destroy-environment     
 
-#   deploy-frontend:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Get backend url
-#           command: |
-#             # your code here
-#             export API_URL="http://${BACKEND_IP}:3030"
-#             echo "${API_URL}"
-#       - run:
-#           name: Deploy frontend objects
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure      
+  deploy-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/ 
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            sudo npm install webpack-dev-server -g
+            sudo npm install
+      - run:
+          name: Get backend url
+          command: |
+            export BACKEND_IP=$(sed -n 2p .circleci/ansible/inventory.txt)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo ENVIRONMENT=production > "frontend/.env"
+            echo NODE_ENV=production >> "frontend/.env"
+            echo API_URL=$API_URL >> "frontend/.env"
+            echo $API_URL
+      - run:
+          name: Build frontend
+          command: |
+            cd frontend
+            ls -la
+            cat .env
+            npm run build
+      - aws-cli/setup
+      - run:
+          name: Deploy frontend objects
+          command: |
+            aws s3 cp --recursive frontend/dist "s3://udapeople-<< pipeline.parameters.workflow-id >>"
+       - destroy-environment
+      # Here's where you will add some code to rollback on failure      
                     
-#   deploy-backend:
-#     docker:
-#       # Docker image here that supports Ansible
-#     steps:
-#       # Checkout code from git
-#       # Add ssh keys with fingerprint
-#       # attach workspace
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Deploy backend
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["ce:5b:a2:30:c3:9e:1f:58:53:80:63:62:39:e5:1f:72"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible openssh-client tar gzip
+      - restore_cache:
+          keys: ["backend-dist"]  
+      - run:
+          name: Deploy backend
+          command: |
+            cd /home
+            tar czf backend.tar.gz -P /home/circleci/project/backend/dist
+      - run:
+          name: Deploy backend 2
+          command: |
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook \
+              -i .circleci/ansible/inventory.txt \
+              .circleci/ansible/deploy-backend.yml
+      - run:
+          name: Install AWS CLI for rollback
+          when: on_fail
+          command: |
+            apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli
+      - destroy-environment  
 
 #   smoke-test:
 #     docker:
