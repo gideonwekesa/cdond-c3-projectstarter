@@ -140,7 +140,7 @@ jobs:
           name: backend security scan
           command: |
             cd backend
-            npm audit fix --audit-level=critical --force
+            npm audit fix --audit-level=critical --force 
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -149,7 +149,7 @@ jobs:
 
 #   deploy-infrastructure:
 #     docker:
-#       # Docker image here that supports AWS CLI
+#       # Docker image here that supports AWS CLI TES
 #     steps:
 #       # Checkout code from git
 #       - run:
