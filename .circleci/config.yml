@@ -2,18 +2,24 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@1.3.0
 
-# commands:
-#   destroy-environment:
-#     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-#     parameters:
-      # Add parameter here   
-  #   steps:
-  #     - run:
-  #         name: Destroy environments
-  #         when: on_fail
-  #         command: |
-  #           # Your code here
-  #           exit 1
+parameters:
+  workflow-id:
+    type: string
+    default: "${CIRCLE_WORKFLOW_ID:0:7}"
+
+commands:
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            aws s3 rm --recursive s3://udapeople-<< pipeline.parameters.workflow-id >>
+            aws cloudformation delete-stack \
+              --stack-name "udapeople-backend-<< pipeline.parameters.workflow-id >>"
+            aws cloudformation delete-stack \
+              --stack-name "udapeople-frontend-<< pipeline.parameters.workflow-id >>"
 
   # revert-migrations:
   #   description: Revert the last migration if successfully run in the current workflow.
@@ -162,7 +168,7 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-     
+      - destroy-environment 
          
 
 #   configure-infrastructure:
