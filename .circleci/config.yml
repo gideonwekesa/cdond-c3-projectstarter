@@ -402,7 +402,7 @@ jobs:
 #     docker:
 #       # Docker image here
 #     steps:
-#       # Checkout code from git
+#       # Checkout code
 #       - run:
 #           name: Get old stack workflow id
 #           command: |
