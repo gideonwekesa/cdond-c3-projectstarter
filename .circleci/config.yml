@@ -333,11 +333,13 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            export BACKEND_URL=$(sed -n 2p .circleci/ansible/inventory.txt)
+            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            API_URL="http://${BACKEND_IP}:3030"
+            curl "${API_URL}/api/status"
       - run:
           name: Backend smoke test.
           command: |
-            if curl -s https://${BACKEND_URL}:3030/api/status
+            if curl -s https://${API_URL}/api/status
             then
             return 1
             else
