@@ -337,11 +337,12 @@ jobs:
           command: |
              BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
              API_URL="http://${BACKEND_IP}:3030"
-             if curl -s https://${BACKEND_URL}:3030/api/status
+             echo "${API_URL}"
+             if curl "${API_URL}/api/status" | grep "ok"
              then
-             return 1
-             else
              return 0
+             else
+             return 1
              fi
       - run:
           name: Frontend smoke test.
