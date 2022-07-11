@@ -377,7 +377,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
-              --stack-name "udapeople-cloudfront" \
+              --stack-name "InitialStack" \
               --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
               --tags project=udapeople
       - destroy-environment
