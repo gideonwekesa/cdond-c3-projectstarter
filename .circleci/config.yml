@@ -389,11 +389,11 @@ jobs:
               --stack-name "InitialStack" \
               --parameter-overrides WorkflowID="<< pipeline.parameters.workflow-id >>" \
               --tags project=udapeople
-              
+
             echo OldWorkflowID: "${OldWorkflowID}"
             echo Current Workflow Id: "{CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment
-      # Here's where you will add some code to rollback on failure  
+      # Here's where you will add some code to rollback on failur  
 
 # cleanup:
 #     docker:
